@@ -1,0 +1,77 @@
+import React, { useEffect } from "react";
+import { Helmet } from "react-helmet";
+import { useDispatch, useSelector } from "react-redux";
+import { Col, Row } from "react-bootstrap";
+import Product from "../components/Product";
+import { listProducts } from "../store/actions/productActions";
+import Message from "../components/Message";
+import Loader from "../components/Loader";
+import Paginate from "../components/Paginate";
+import ProductCarousel from "../components/ProductCarousel";
+import Meta from "../components/Meta";
+import { Link } from "react-router-dom";
+const HomeScreen = ({ match }) => {
+  const keyword = match.params.keyword;
+  const pageNumber = match.params.pageNumber || 1;
+  const dispatch = useDispatch();
+  const productList = useSelector((state) => state.productList);
+  const { loading, error, products, page, pages } = productList;
+
+  useEffect(() => {
+    dispatch(listProducts(keyword, pageNumber));
+    if (error) {
+      dispatch(listProducts());
+    }
+  }, [ keyword, pageNumber,dispatch]);
+
+  return (
+    <>
+      <Meta />
+      {!keyword ? (
+        <ProductCarousel />
+      ) : (
+        <Link to="/" className="btn btn-light">
+          Go Back
+        </Link>
+      )}
+      <h1>Latest Products</h1>
+      <hr />
+      {/**
+        if loading display 
+        spinner otherwise if error display error message 
+        otherwise display products
+      
+      **/}
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <Message variant="danger">{error}</Message>
+      ) : (
+        <>
+          <Row>
+            {products.length === 0 && keyword && (
+              <Message>No Product Matches this Search</Message>
+            )}
+            {products.map((product) => (
+              <Col
+                className="align-items-stretch d-flex"
+                sm={12}
+                md={6}
+                lg={4}
+                key={product._id}
+              >
+                <Product product={product} />
+              </Col>
+            ))}
+          </Row>
+          <Paginate
+            keyword={keyword ? keyword : ""}
+            pages={pages}
+            page={page}
+          />
+        </>
+      )}
+    </>
+  );
+};
+export default HomeScreen;
